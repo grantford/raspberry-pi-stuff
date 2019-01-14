@@ -1,0 +1,35 @@
+---
+- hosts: pi
+  become: yes
+  vars:
+    cloudflared_url: "https://bin.equinox.io/a/4SUTAEmvqzB/cloudflared-2018.7.2-linux-arm.tar.gz"
+  tasks:
+    - name: Ensure cloudflared user exists
+      user:
+        name: cloudflared
+        create_home: no
+        system: yes
+        shell: /usr/sbin/nologin
+    - name: Download cloudflared
+      unarchive:
+        src: "{{ cloudflared_url }}"
+        dest: /usr/local/bin
+        remote_src: yes
+        mode: 0755
+        owner: cloudflared
+        group: cloudflared
+    - name:  Cloudflared config file
+      copy:
+        src: cloudflared
+        dest: /etc/default/cloudflared
+        owner: cloudflared
+        group: cloudflared
+    - name: Cloudflared systemd script
+      copy:
+        src: cloudflared.service
+        dest: /lib/systemd/system/cloudflared.service
+    - name: Enable cloudflared service
+      systemd:
+        name: cloudflared
+        state: started
+        enabled: yes
